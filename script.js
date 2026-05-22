@@ -16,12 +16,46 @@ function normalizePhone(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
+function validateBookingForm(data) {
+  const { nome, telefone, cpf, checkin, checkout, hospedes, quarto } = data;
+
+  if (!nome || !telefone || !checkin || !checkout || !hospedes || !quarto) {
+    return { valid: false, message: 'Por favor, preencha todos os campos obrigatórios.' };
+  }
+
+  const phoneDigits = normalizePhone(telefone);
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+    return { valid: false, message: 'Por favor, informe um WhatsApp válido com DDD.' };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dateIn = new Date(`${checkin}T00:00:00`);
+  const dateOut = new Date(`${checkout}T00:00:00`);
+
+  if (dateIn < today) {
+    return { valid: false, message: 'A data de entrada não pode ser anterior a hoje.' };
+  }
+
+  if (dateOut <= dateIn) {
+    return { valid: false, message: 'A data de saída precisa ser posterior à entrada.' };
+  }
+
+  if (cpf && normalizePhone(cpf).length !== 11) {
+    return { valid: false, message: 'O CPF informado é inválido.' };
+  }
+
+  return { valid: true };
+}
+
 // Efeito de Confete Simples
 function launchConfetti() {
   const colors = ['#ff7b00', '#20ba56', '#003b95', '#ffcc00', '#f4f8fd'];
-  for (let i = 0; i < ocument.createElement('div');
+  for (let i = 0; i < 80; i++) {
+    const confetti = document.createElement('div');
     confetti.className = 'confetti';
     
+    const isLeft = i % 2 === 0;
     confetti.style.bottom = '-10px';
     
     // Define o ponto de origem (esquerda ou direita)
@@ -41,10 +75,12 @@ function launchConfetti() {
     confetti.style.width = Math.random() * 8 + 6 + 'px';
     confetti.style.height = confetti.style.width;
     confetti.style.animation = `confetti-shoot ${Math.random() * 2 + 1.5}s ease-out forwards`;
-fm00);
+
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 4000);
   }
 }
-a atuais do formulário
+// Gerar link do WhatsApp baseado nos dados atuais do formulário
 function getWhatsAppLink() {
   const nome = document.getElementById('nome').value.trim();
   const checkin = document.getElementById('checkin').value;
@@ -95,17 +131,12 @@ bookingForm.addEventListener('submit', async function (e) {
   formMessage.textContent = '';
   formMessage.className = 'form-message';
 
-  if (!nome || !telefone || !checkin || !checkout || !hospedes || !quarto) {
-    formMessage.textContent = 'Por favor, preencha todos os campos obrigatórios.';
-    formMessage.classList.add('error');
-    showToast('Preencha os dados da reserva antes de enviar.', 'error');
-    return;
-  }
+  const validation = validateBookingForm({ nome, telefone, cpf, checkin, checkout, hospedes, quarto });
 
-  if (new Date(`${checkout}T00:00:00`) <= new Date(`${checkin}T00:00:00`)) {
-    formMessage.textContent = 'A data de saída precisa ser posterior à entrada.';
+  if (!validation.valid) {
+    formMessage.textContent = validation.message;
     formMessage.classList.add('error');
-    showToast('Data de saída inválida.', 'error');
+    showToast(validation.message, 'error');
     return;
   }
 
