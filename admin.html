@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PADC Admin | Gestão de Reservas</title>
-  <meta name="description" content="Painel administrativo da Pousada Alto da Cruz para reservas, caixa, calendário e relatórios." />
+  <title>Pousada Alto da Cruz | Login</title>
+  <meta name="description" content="Acesse sua conta na Pousada Alto da Cruz para gerenciar suas reservas ou o sistema interno." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span>Administração</span><strong>Pousada Alto da Cruz</strong></a>
+    <a class="brand" href="index.html"><span>Acesso Interno</span><strong>Pousada Alto da Cruz</strong></a>
     <nav>
       <a href="index.html">Página pública</a>
-      <a href="admin.html">Dashboard</a>
+      <a href="admin.html">Meu Acesso</a>
     </nav>
     <a class="btn small" href="index.html">Voltar ao site</a>
   </header>
@@ -21,9 +21,9 @@
   <main>
     <section class="hero admin-hero">
       <div class="hero-text">
-        <span class="tag">Painel de gestão</span>
-        <h1>Controle de reservas, caixa e relatórios</h1>
-        <p>Acesse rapidamente o calendário de ocupação, visualize reservas por status, controle o fluxo de caixa e emita relatórios com clareza.</p>
+        <span class="tag">Acesso ao sistema</span>
+        <h1>Bem-vindo à Pousada Alto da Cruz</h1>
+        <p>Acesse suas informações de hospedagem ou utilize as ferramentas de gestão interna com segurança e agilidade.</p>
       </div>
       <div class="hero-card admin-hero-card">
         <img src="https://pousadaaltodacruz.online/assets/images/recepcao.jpg" alt="Painel administrativo da pousada">
@@ -34,15 +34,14 @@
       <div class="admin-card">
         <div class="admin-header">
           <div>
-            <span class="tag">Acesso restrito</span>
-            <h2>Login de usuários autorizados</h2>
-            <p>Somente administradores e funcionários credenciados podem operar reservas, caixa e relatórios.</p>
+            <span class="tag">Identificação</span>
+            <h2>Entrar no sistema</h2>
+            <p>Entre com seu acesso para continuar</p>
           </div>
           <button id="signOutBtn" class="btn outline hidden">Sair</button>
         </div>
 
         <div id="authBlock" class="admin-auth">
-          <p>Informe seu e-mail e senha para continuar.</p>
           <form id="loginForm" class="admin-form">
             <div class="form-group">
               <label for="adminEmail">E-mail</label>
@@ -108,6 +107,26 @@
 
           <div id="logsTab" class="admin-tab hidden">
             <div class="log-list" id="logList"></div>
+          </div>
+        </div>
+
+        <!-- ÁREA DO HÓSPEDE -->
+        <div id="guestContent" class="admin-content hidden">
+          <div class="booking-header">
+            <h2>Minhas Reservas</h2>
+            <p>Confira os detalhes da sua estadia conosco.</p>
+          </div>
+          <div id="guestReservations" class="reservation-details"></div>
+
+          <div class="booking-header" style="margin-top: 40px;">
+            <h2>Como Chegar</h2>
+            <p>Veja a localização da pousada no mapa.</p>
+          </div>
+          <div class="map-box">
+            <iframe
+              src="https://www.google.com/maps?q=Tv.%20Get%C3%BAlio%20Vargas%2C%2019%20-%20Centro%2C%20Cama%C3%A7ari%20-%20BA&output=embed"
+              width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
           </div>
         </div>
       </div>

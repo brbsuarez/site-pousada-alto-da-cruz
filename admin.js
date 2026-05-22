@@ -17,6 +17,7 @@ const loginForm = document.getElementById('loginForm');
 const loginMessage = document.getElementById('loginMessage');
 const signOutBtn = document.getElementById('signOutBtn');
 const adminContent = document.getElementById('adminContent');
+const guestContent = document.getElementById('guestContent');
 const authBlock = document.getElementById('authBlock');
 const adminUserLabel = document.getElementById('adminUserLabel');
 const adminRoleLabel = document.getElementById('adminRoleLabel');
@@ -315,16 +316,29 @@ async function refreshAdminData() {
     setLoading(true, 'Atualizando painel...');
     rooms = await fetchRooms();
     reservations = await fetchReservations();
-    cashEntries = await fetchCashEntries();
-    auditLogs = await fetchAuditLogs();
-    buildCalendarView();
-    renderCashSummary();
-    buildReports();
-    if (currentRole === 'admin') {
-      renderLogs();
-      logsTabBtn.classList.remove('hidden');
+    
+    // Limpa áreas de conteúdo antes de renderizar para evitar duplicidade
+    guestContent.innerHTML = ''; 
+
+    if (currentRole === 'hospede') {
+      adminContent.classList.add('hidden');
+      guestContent.classList.remove('hidden');
+      renderGuestDashboard();
     } else {
-      logsTabBtn.classList.add('hidden');
+      guestContent.classList.add('hidden');
+      adminContent.classList.remove('hidden');
+      cashEntries = await fetchCashEntries();
+      auditLogs = await fetchAuditLogs();
+      buildCalendarView();
+      renderCashSummary();
+      buildReports();
+      
+      if (currentRole === 'admin') {
+        renderLogs();
+        logsTabBtn.classList.remove('hidden');
+      } else {
+        logsTabBtn.classList.add('hidden');
+      }
     }
   } catch (error) {
     console.error('Erro ao carregar dados administrativos', error);
@@ -332,6 +346,24 @@ async function refreshAdminData() {
   } finally {
     setLoading(false);
   }
+}
+
+function renderGuestDashboard() {
+  const guestReservationsEl = document.getElementById('guestReservations');
+  const myRes = reservations.filter(res => normalizePhone(res.phone) === normalizePhone(currentUser.phoneNumber || currentUser.email));
+  
+  if (myRes.length === 0) {
+    guestReservationsEl.innerHTML = '<p>Nenhuma reserva encontrada para este usuário.</p>';
+    return;
+  }
+
+  guestReservationsEl.innerHTML = myRes.map(res => `
+    <div class="details-panel" style="margin-bottom: 20px; margin-top: 20px;">
+      <h3>Hospedagem: ${res.roomType}</h3>
+      <p><strong>Status:</strong> <span class="status-pill ${getStatusClass(res.status)}">${res.status}</span></p>
+      <p><strong>Check-in:</strong> ${res.checkIn} | <strong>Check-out:</strong> ${res.checkOut}</p>
+    </div>
+  `).join('');
 }
 
 async function handleCashSubmit(event) {

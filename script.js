@@ -16,6 +16,58 @@ function normalizePhone(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
+// Efeito de Confete Simples
+function launchConfetti() {
+  const colors = ['#ff7b00', '#20ba56', '#003b95', '#ffcc00', '#f4f8fd'];
+  for (let i = 0; i < 60; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    confetti.style.left = Math.random() * 100 + 'vw';
+    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    confetti.style.width = Math.random() * 8 + 6 + 'px';
+    confetti.style.height = confetti.style.width;
+    confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards`;
+    confetti.style.opacity = Math.random();
+    document.body.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 5000);
+  }
+}
+
+// Gerar link do WhatsApp baseado nos dados atuais do formulário
+function getWhatsAppLink() {
+  const nome = document.getElementById('nome').value.trim();
+  const checkin = document.getElementById('checkin').value;
+  const checkout = document.getElementById('checkout').value;
+  const quarto = document.getElementById('quarto').value;
+  
+  if (nome && checkin && checkout && quarto) {
+    const message = `Olá! Meu nome é ${nome}. Gostaria de confirmar minha reserva enviada pelo site para o ${quarto} de ${checkin} até ${checkout}.`;
+    return `https://wa.me/5571985610497?text=${encodeURIComponent(message)}`;
+  }
+  return 'https://wa.me/5571985610497';
+}
+
+function showSuccessExperience() {
+  const modal = document.getElementById('successModal');
+  const modalWaBtn = document.getElementById('modalWhatsappBtn');
+  
+  modalWaBtn.href = getWhatsAppLink();
+  modal.classList.remove('hidden');
+  launchConfetti();
+
+  // Tocar som de sucesso suave
+  const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
+  successSound.volume = 0.5; // Volume em 50% para ser suave
+  successSound.play().catch(err => console.log("Áudio bloqueado pelo navegador até interação do usuário:", err));
+
+  // Fechar modal
+  const closeBtn = document.getElementById('closeModalBtn');
+  const closeHandler = () => modal.classList.add('hidden');
+  closeBtn.onclick = closeHandler;
+  // Fechar ao clicar fora do conteúdo
+  modal.onclick = (e) => { if(e.target === modal) closeHandler(); };
+}
+
 bookingForm.addEventListener('submit', async function (e) {
   e.preventDefault();
 
@@ -48,7 +100,7 @@ bookingForm.addEventListener('submit', async function (e) {
 
   try {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Enviando...';
+    submitBtn.textContent = 'Enviando reserva...';
 
     const people = parseInt(hospedes, 10);
 
@@ -63,9 +115,7 @@ bookingForm.addEventListener('submit', async function (e) {
       notes: observacoes,
     });
 
-    formMessage.textContent = '✓ Reserva enviada com sucesso! A pousada entrará em contato pelo WhatsApp.';
-    formMessage.classList.add('success');
-    showToast('Reserva enviada com sucesso.');
+    showSuccessExperience();
     bookingForm.reset();
 
     setTimeout(() => {
@@ -76,7 +126,7 @@ bookingForm.addEventListener('submit', async function (e) {
     }, 3000);
   } catch (error) {
     console.error('Erro ao enviar reserva:', error);
-    formMessage.textContent = 'Erro ao enviar reserva. Tente novamente ou use o WhatsApp.';
+    formMessage.textContent = 'Ops! Ocorreu um erro ao processar sua reserva. Por favor, tente novamente ou nos chame no WhatsApp.';
     formMessage.classList.add('error');
     showToast('Erro ao enviar reserva.', 'error');
     submitBtn.disabled = false;
@@ -116,13 +166,16 @@ function initScrollReveal() {
     });
   }, observerOptions);
 
-  // Seleciona as seções e também os cards de quartos individualmente
-  document.querySelectorAll('.section, .booking-card, .hero-inner, .rooms article').forEach(el => {
-    el.classList.add('reveal');
+  // Seleciona as seções e também os cards de quartos e destaques individualmente
+  document.querySelectorAll('.section, .booking-card, .hero-inner, .rooms article, .features article').forEach((el, index) => {
+    // Define a direção com base no índice: pares vêm da esquerda, ímpares da direita
+    const directionClass = index % 2 === 0 ? 'reveal-left' : 'reveal-right';
+    el.classList.add(directionClass);
 
-    // Se o elemento for um card de quarto, aplica um delay baseado no índice
-    if (el.tagName.toLowerCase() === 'article' && el.closest('.rooms')) {
-      const cards = Array.from(el.parentNode.querySelectorAll('article'));
+    // Se o elemento for um card de quarto ou destaque, aplica um delay baseado no índice
+    const container = el.closest('.rooms') || el.closest('.features');
+    if (el.tagName.toLowerCase() === 'article' && container) {
+      const cards = Array.from(container.querySelectorAll('article'));
       const index = cards.indexOf(el);
       // Multiplica o índice por 0.15s para criar o efeito de escada
       el.style.transitionDelay = `${index * 0.15}s`;
@@ -132,4 +185,51 @@ function initScrollReveal() {
   });
 }
 
+// Destacar seção atual no menu ao rolar a página
+function initScrollSpy() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.topbar nav a[href^="#"]');
+
+  const observerOptions = {
+    // Ajusta a margem para detectar a seção quando ela estiver no topo/meio da tela
+    rootMargin: '-150px 0px -70% 0px',
+    threshold: 0
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+        });
+      }
+    });
+  }, observerOptions);
+
+  sections.forEach(section => observer.observe(section));
+}
+
+// Lógica de abrir/fechar menu mobile
+function initMobileMenu() {
+  const topbar = document.querySelector('.topbar');
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.querySelectorAll('.topbar nav a');
+
+  if (!menuToggle) return;
+
+  menuToggle.addEventListener('click', () => {
+    topbar.classList.toggle('menu-open');
+  });
+
+  // Fecha o menu automaticamente ao clicar em qualquer link
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      topbar.classList.remove('menu-open');
+    });
+  });
+}
+
 initScrollReveal();
+initScrollSpy();
+initMobileMenu();
